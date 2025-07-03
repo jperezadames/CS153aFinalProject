@@ -11,11 +11,11 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      // Get current user (for demo, just get the first user)
-      const usersJson = await AsyncStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
-      if (users.length > 0) {
-        setUsername(users[0].username);
+      // Get current logged-in user
+      const userJson = await AsyncStorage.getItem('currentUser');
+      const user = userJson ? JSON.parse(userJson) : null;
+      if (user) {
+        setUsername(user.username);
       }
       // Get profile image
       const img = await AsyncStorage.getItem('profileImage');
@@ -124,7 +124,10 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('ChangePassword')}>
           <Text style={styles.rowText}>Change Password</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.row, styles.signOutRow]} onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity style={[styles.row, styles.signOutRow]} onPress={async () => {
+          await AsyncStorage.removeItem('currentUser');
+          navigation.navigate('Login');
+        }}>
           <Text style={[styles.rowText, styles.signOutText]}>Sign Out</Text>
         </TouchableOpacity>
       </View>

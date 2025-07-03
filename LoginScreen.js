@@ -22,6 +22,7 @@ export default function LoginScreen({ navigation }) {
       const user = users.find(u => u.username === username && u.password === password);
       if (user) {
         setError('');
+        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
         navigation.navigate('Home');
       } else {
         setError('Incorrect login credentials');
