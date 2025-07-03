@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, View, Text, TouchableOpacity, TextInput, FlatList, Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 function generateKey() {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -14,25 +15,32 @@ export default function ReviewScreen() {
   const [inputVisible, setInputVisible] = useState(false);
   const [newGame, setNewGame] = useState('');
 
-  useEffect(() => {
-    const loadGames = async () => {
-      const userJson = await AsyncStorage.getItem('currentUser');
-      const user = userJson ? JSON.parse(userJson) : null;
-      if (user) {
-        setUsername(user.username);
-        const gamesJson = await AsyncStorage.getItem(`reviews_${user.username}`);
-        const loadedGames = gamesJson ? JSON.parse(gamesJson) : [];
-        const normalizedGames = loadedGames.map(g =>
-          typeof g === 'string' ? { key: generateKey(), name: g, rating: 0 } : { ...g, rating: g.rating || 0 }
-        );
-        setGames(normalizedGames);
-        if (normalizedGames.length !== loadedGames.length) {
-          await AsyncStorage.setItem(`reviews_${user.username}`, JSON.stringify(normalizedGames));
-        }
+  const loadGames = async () => {
+    const userJson = await AsyncStorage.getItem('currentUser');
+    const user = userJson ? JSON.parse(userJson) : null;
+    if (user) {
+      setUsername(user.username);
+      const gamesJson = await AsyncStorage.getItem(`reviews_${user.username}`);
+      const loadedGames = gamesJson ? JSON.parse(gamesJson) : [];
+      const normalizedGames = loadedGames.map(g =>
+        typeof g === 'string' ? { key: generateKey(), name: g, rating: 0 } : { ...g, rating: g.rating || 0 }
+      );
+      setGames(normalizedGames);
+      if (normalizedGames.length !== loadedGames.length) {
+        await AsyncStorage.setItem(`reviews_${user.username}`, JSON.stringify(normalizedGames));
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     loadGames();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadGames();
+    }, [])
+  );
 
   const addGame = async (gameName) => {
     if (!gameName) return;
